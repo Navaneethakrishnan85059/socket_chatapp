@@ -1,0 +1,50 @@
+import useSocket from "@/pages/hooks/useSocket";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+
+
+interface Messagesdata{
+    room:string,
+    message:string,
+    time:Date
+}
+const SlugChat = () => {
+  const params = useParams();
+  const room = params?.chat_id as string;
+  const socket = useSocket(room);
+
+  const [message, setMessage] = useState<string>("");
+  const [messages, setMessages] = useState<Messagesdata[]>([]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("received_message", (data) => {
+        setMessages((prev) => [...prev, data]);
+      });
+    }
+  }, [socket]);
+
+  const sendMesage=()=>{
+    const messageData:Messagesdata={room,message,time:new Date()}
+    socket?.emit('send_message',messageData)
+    setMessages((prev)=>[...prev,messageData])
+  }
+  return (
+    <div>
+           <h1>Room: {room}</h1>
+           <div>
+               {messages.map((msg, index) => (
+                   <p key={index}> send Message:{msg.message}</p>
+               ))}
+           </div>
+           <input
+               type="text"
+               value={message}
+               onChange={(e) => setMessage(e.target.value)}
+           />
+           <button onClick={sendMesage}>Send</button>
+       </div>
+  );
+};
+
+export default SlugChat;

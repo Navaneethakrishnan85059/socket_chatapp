@@ -1,0 +1,41 @@
+import express from "express";
+import cors from "cors";
+import http from "http";
+import { Server } from "socket.io";
+const app = express();
+
+const port: number = 8080;
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",  // Allow all origins
+    methods: ["GET", "POST"],
+  }
+  
+});
+
+app.use(cors());
+app.use(express.json());
+
+io.on("connect", (socket) => {
+  console.log("socket.id :>> ", socket.id);
+
+  socket.on("join_room", (room) => {
+    socket.join(room);
+    console.log(`${socket.id} socket and room ${room}`);
+  });
+
+  socket.on('send_message',(data)=>{
+io.to(data.room).emit("received_message",data)
+  })
+
+
+  socket.on('disconnect',()=>{
+    console.log(' disconnect socket.id :>> ', socket.id);
+  })
+});
+server.listen(port,() => {
+  console.log("port :>> ", port);
+});
